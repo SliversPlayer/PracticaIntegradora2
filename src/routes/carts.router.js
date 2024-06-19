@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import cartModel from '../models/cart.model.js';
+import userModel from '../models/user.model.js'; // Importa el modelo User
 import productModel from '../models/product.model.js'; // Importa el modelo Product
 
 const routerC = Router();
@@ -36,11 +37,33 @@ routerC.get('/:cid', async (req, res) => {
     }
 });
 
-// Crear un nuevo carrito
-routerC.post('/', async (req, res) => {
+// // Crear un nuevo carrito
+// routerC.post('/', async (req, res) => {
+//     try {
+//         const newCart = new cartModel(req.body);
+//         const savedCart = await newCart.save();
+//         res.status(201).json({ status: 'success', payload: savedCart });
+//     } catch (error) {
+//         console.error('Error al crear el carrito:', error);
+//         res.status(400).json({ status: 'error', message: 'Error al crear el carrito' });
+//     }
+// });
+
+// Crear un nuevo carrito para un usuario específico
+routerC.post('/:uid', async (req, res) => {
     try {
+        const userId = req.params.uid;
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+        }
         const newCart = new cartModel(req.body);
         const savedCart = await newCart.save();
+        
+        // Asociar el carrito al usuario
+        user.cart = savedCart._id;
+        await user.save();
+
         res.status(201).json({ status: 'success', payload: savedCart });
     } catch (error) {
         console.error('Error al crear el carrito:', error);
