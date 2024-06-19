@@ -1,11 +1,12 @@
-import passport from "passport";
+import passport from 'passport';
 import local from 'passport-local';
 import GitHubStrategy from 'passport-github2';
 import usersModel from '../models/user.model.js';
-import { createHash, isValidPassword } from "../utils.js";
+import { createHash, isValidPassword } from '../utils.js';
 import jwt from 'passport-jwt';
 import jwtLibrary from 'jsonwebtoken'; // Importar jsonwebtoken para generar tokens
 import dotenv from 'dotenv';
+
 // Cargar variables de entorno
 dotenv.config();
 
@@ -16,26 +17,27 @@ const LocalStrategy = local.Strategy;
 
 const cookieExtractor = (req) => {
     let token = null;
+    console.log(req.headers)
     if (req && req.cookies) {
-        token = req.cookies['coderCookieToken'];
+        token = req.headers.authorization.split(' ')[1]
     }
-    return token;
-};
+    return token
+}
 
 const initializePassport = () => {
-    
     // Estrategia JWT
     passport.use('jwt', new JWTStrategy({
         jwtFromRequest: ExtractJWT.fromExtractors([cookieExtractor]),
-        secretOrKey: "coderSecret"
-        }, async (jwt_payload, done) => {
+        secretOrKey: 'coderSecret',
+    }, async (jwt_payload, done) => {
         try {
-            return done(null, jwt_payload)  
+                return done(null, jwt_payload);
+            }
+        catch (error) {
+            return done(error, false);
         }
-         catch (error) {
-            return done(error);
-        }
-    }));
+    }
+    ))
 
     // Serializar y deserializar
     passport.serializeUser((user, done) => {
@@ -68,7 +70,7 @@ const initializePassport = () => {
                 let result = await userService.create(newUser);
                 return done(null, result);
             } catch (error) {
-                return done("Error al obtener el suuario" + error);
+                return done("Error al obtener el usuario: " + error);
             }
         }
     ));
@@ -85,7 +87,7 @@ const initializePassport = () => {
                 return done(null, false);
             }
             // Generar JWT
-            const token = jwtLibrary.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const token = jwtLibrary.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET || 'coderSecret', { expiresIn: '1h' });
             return done(null, { user, token });
         } catch (error) {
             return done(error);
@@ -111,52 +113,17 @@ const initializePassport = () => {
                 };
                 let result = await userService.create(newUser);
                 // Generar JWT
-                const token = jwtLibrary.sign({ id: result._id, email: result.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                const token = jwtLibrary.sign({ id: result._id, email: result.email }, process.env.JWT_SECRET || 'coderSecret', { expiresIn: '1h' });
                 return done(null, { user: result, token });
             } else {
                 // Generar JWT
-                const token = jwtLibrary.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                const token = jwtLibrary.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET || 'coderSecret', { expiresIn: '1h' });
                 return done(null, { user, token });
             }
         } catch (error) {
             return done(error);
         }
     }));
-
-
-
 };
 
 export default initializePassport;
-
-
-
-//     passport.use('github', new GitHubStrategy({
-
-//         clientID: process.env.GITHUB_CLIENT_ID,
-//         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-//         callbackURL: process.env.GITHUB_CALLBACK_URL,
-        
-//     }, async(accessToken, refreshToken, profile, done)=>{
-//         try {
-//             console.log(profile);
-//             let user = await userService.findOne({email: profile._json.email})
-//             if(!user){
-//                 let newUser={
-//                     first_name:profile._json.name,
-//                     last_name:"",
-//                     age: 89,
-//                     email:profile._json.email,
-//                     password:""
-//                 }
-//                 let result = await userService.create(newUser)
-//                 done(null,user)
-//             }
-//             else{
-//                 done(null,user)
-//             }
-//         } catch (error) {
-//             return done(error)
-//         }
-//     }
-// ))

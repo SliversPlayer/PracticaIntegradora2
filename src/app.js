@@ -17,6 +17,9 @@ import viewsRouter from '../src/routes/views.router.js';
 import socketProducts from './listener/socketProducts.js';
 import sessionsRouter from './routes/api/sessions.js';
 import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
+
+
 
 // Cargar variables de entorno
 dotenv.config();
@@ -58,6 +61,14 @@ app.use('/api/messages', messagesRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/api/sessions', sessionsRouter);
+
+app.post('/login', (req, res) => {
+    const {email, password} = req.body
+    if (email == "coder@coder.com" && password == "coderpass") {
+        let token = jwt.sign({ email, password, role: "user"}, "coderSecret", {expiresIn: "24h"})
+        res.send({ message: "inicio de sesión exitoso", token})
+    }
+})
 
 app.get('/current', passportCall('jwt'), authorization('user'), (req,res) => {
     res.send(req.user);
