@@ -36,4 +36,5 @@ router.post('/logout', (req, res) => {
         res.redirect('/login');
     });
 });
+
 export default router;
