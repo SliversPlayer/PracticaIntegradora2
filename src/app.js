@@ -49,17 +49,8 @@ app.use(express.json());
 app.use(cookieParser())
 initializePassport()
 app.use(passport.initialize())
-//app.use(passport.session())
 
 app.use(express.urlencoded({ extended: true }));
-
-// Configuración de la sesión
-// app.use(session({
-//     secret: 'secretkey',
-//     resave: false,
-//     saveUninitialized: true,
-//     store: MongoStore.create({ mongoUrl: conString }),
-// }));
 
 // Middleware para manejar las rutas
 app.use('/', viewsRouter);
